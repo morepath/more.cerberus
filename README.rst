@@ -51,56 +51,43 @@ Validate
 --------
 
 The ``more.cerberus`` integration helps
-with validation of the request body as it is POSTed or PUT to a view. First
-we must instantiate the Validator with the schema:
+with validation of the request body as it is POSTed or PUT to a view.
+First we must create a loader for our schema:
 
 .. code-block:: python
 
-  from more.cerberus import CerberusValidator
+  from more.cerberus import loader
 
-  validator = CerberusValidator(user_schema)
+  user_schema_load = loader(user_schema)
 
-After we can use the ``validator.load`` method in a POST request for instance:
+We can use this loader to handle a PUT or POST request for instance:
 
 .. code-block:: python
 
-  @App.json(model=User, request_method='POST', load=validator.load)
+  @App.json(model=User, request_method='POST', load=user_schema_load)
   def user_post(self, request, json):
       # json is now a validated and normalized dict of whatever got
       # POST onto this view that you can use to update
       # self
 
-If you want to update your model for instance in a PUT or PATCH request
-and you don't want required fields to be checked you can use
-``validator.update_load`` instead:
+
+Update models
+-------------
+
+By default in PUT or PATCH requests the ``load`` function
+sets the ``update`` flag of the ``validate()`` method to ``True``,
+so required fields won’t be checked. For other requests like
+POST ``update`` is ``False``.
+
+You can set this manually by passing the ``update`` argument
+to the ``load`` function:
 
 .. code-block:: python
 
-  @App.json(model=User, request_method='PUT', load=validator.update_load)
+  user_schema_load = loader(user_schema, update=False)
+
+  @App.json(model=User, request_method='PUT', load=user_schema_load)
   def user_put(self, request, json):
-
-
-Using different schemas
------------------------
-
-If you want to use a different schemas, you have
-to create a seperate instance for each schema:
-
-.. code-block:: python
-
-  from more.cerberus import CerberusValidator
-
-  user_validator = CerberusValidator(user_schema)
-  document_validator = CerberusValidator(document_schema)
-
-  @App.json(model=User, request_method='POST', load=user_validator.load)
-  def user_post(self, request, json):
-    #  (...)
-
-
-  @App.json(model=Document, request_method='POST', load=document_validator.load)
-  def document_post(self, request, json):
-    #  (...)
 
 
 Customize the Validator
@@ -115,7 +102,7 @@ CerberusValidator:
   import re
   from more.cerberus import CerberusValidator
 
-  class Validator(CerberusValidator):
+  class CustomValidator(CerberusValidator):
       def _validator_validate_email(self, field, value):
         match = re.match(
           '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',value
@@ -132,6 +119,12 @@ CerberusValidator:
             if domain == 'googlemail.com':
               domain = 'gmail.com'
             return parts[0] + '@' + domain
+
+You have to pass the custom Validator class to the ``load`` function:
+
+.. code-block:: python
+
+  user_schema_load = loader(user_schema, validator=CustomValidator)
 
 Now you can use the new email validator and normalizer in your schema:
 

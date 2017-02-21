@@ -1,6 +1,7 @@
 from webtest import TestApp as Client
+import pytest
 
-from more.cerberus import (CerberusApp, CerberusValidator)
+from more.cerberus import CerberusApp, CerberusValidator, loader
 
 
 def test_cerberus():
@@ -26,18 +27,17 @@ def test_cerberus():
         pass
 
     user = User()
-    v = CerberusValidator(user_schema)
 
     @App.path(model=User, path='/')
     def get_user():
         return user
 
-    @App.json(model=User, request_method='POST', load=v.load)
+    @App.json(model=User, request_method='POST', load=loader(user_schema))
     def user_post(self, request, json):
         for key, value in json.items():
             setattr(self, key, value)
 
-    @App.json(model=User, request_method='PUT', load=v.update_load)
+    @App.json(model=User, request_method='PUT', load=loader(user_schema))
     def user_put(self, request, json):
         for key, value in json.items():
             setattr(self, key, value)
@@ -57,40 +57,6 @@ def test_cerberus():
 
     r = c.put_json('/', {'age': 8}, status=422)
     assert r.json == {'age': ['min value is 10']}
-
-
-def test_cerberus_with_request():
-    class User(object):
-        def __init__(self, name=None):
-            self.name = name
-
-    user_schema = {
-        'name': {
-            'type': 'string'
-        }
-    }
-
-    class App(CerberusApp):
-        pass
-
-    user = User()
-    v = CerberusValidator(user_schema)
-
-    @App.path(model=User, path='/')
-    def get_user():
-        return user
-
-    @App.json(model=User, request_method='POST', load=v.load)
-    def user_post(self, request, json):
-        for key, value in json.items():
-            setattr(self, key, value)
-
-    c = Client(App())
-
-    c.post_json('/?entry=Correct', {'name': 'Somebody'})
-
-    assert v.request.GET['entry'] == 'Correct'
-    assert user.name == 'Somebody'
 
 
 def test_cerberus_with_different_schemas():
@@ -118,12 +84,6 @@ def test_cerberus_with_different_schemas():
         }
     }
 
-    user_validator = CerberusValidator(user_schema)
-    assert user_validator.schema == user_schema
-
-    document_validator = CerberusValidator(document_schema)
-    assert document_validator.schema == document_schema
-
     class User(object):
         def __init__(self, name=None, age=None):
             self.name = name
@@ -148,13 +108,13 @@ def test_cerberus_with_different_schemas():
     def get_document():
         return document
 
-    @App.json(model=User, request_method='POST', load=user_validator.load)
+    @App.json(model=User, request_method='POST', load=loader(user_schema))
     def user_post(self, request, json):
         for key, value in json.items():
             setattr(self, key, value)
 
     @App.json(model=Document, request_method='POST',
-              load=document_validator.load)
+              load=loader(document_schema))
     def document_post(self, request, json):
         for key, value in json.items():
             setattr(self, key, value)
@@ -201,13 +161,13 @@ def test_custom_validator():
         pass
 
     user = User()
-    v = Validator(user_schema)
 
     @App.path(model=User, path='/')
     def get_user():
         return user
 
-    @App.json(model=User, request_method='POST', load=v.load)
+    @App.json(model=User, request_method='POST',
+              load=loader(user_schema, Validator))
     def user_post(self, request, json):
         for key, value in json.items():
             setattr(self, key, value)
@@ -226,6 +186,11 @@ def test_custom_validator():
     )
 
     assert r.json == {'email': ['Not valid email']}
+
+    with pytest.raises(TypeError) as excinfo:
+        loader(user_schema, validator=User)
+    assert ('Validator must be a subclass of more.cerberus.CerberusValidator'
+            in str(excinfo.value))
 
 
 def test_custom_validator_with_request():
@@ -255,7 +220,6 @@ def test_custom_validator_with_request():
         pass
 
     user = User()
-    v = Validator(user_schema)
 
     @App.setting(section='email', name='at')
     def get_email_setting():
@@ -265,7 +229,8 @@ def test_custom_validator_with_request():
     def get_user():
         return user
 
-    @App.json(model=User, request_method='POST', load=v.load)
+    @App.json(model=User, request_method='POST',
+              load=loader(user_schema, Validator))
     def user_post(self, request, json):
         for key, value in json.items():
             setattr(self, key, value)
