@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 long_description = (
     io.open('README.rst', encoding='utf-8').read()
     + '\n\n' +
-    io.open('CHANGES.txt', encoding='utf-8').read())
+    io.open('CHANGES.rst', encoding='utf-8').read())
 
 setup(name='more.cerberus',
       version='0.1dev0',
