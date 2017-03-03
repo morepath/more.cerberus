@@ -203,10 +203,10 @@ Error handling
 --------------
 
 If validation fails due to a validation error (a required field is
-missing, or a field is of the wrong datatype, for instance), you want to show
-some kind of error message. The ``CerberusValidator.load`` method
-raises the ``more.cerberus.ValidationError`` exception in case of
-errors.
+missing, or a field is of the wrong datatype, for instance), you want
+to show some kind of error message. The ``load`` function created by
+``more.cerberus`` raises the ``more.cerberus.ValidationError`` exception
+in case of errors.
 
 This exception object has an ``errors`` attribute with the validation errors.
 You must define an exception view for it, otherwise validation errors are
