@@ -58,6 +58,18 @@ def test_cerberus():
     r = c.put_json('/', {'age': 8}, status=422)
     assert r.json == {'age': ['min value is 10']}
 
+    r = c.put_json('/', {'name': 'An', 'age': 8}, status=422)
+    assert r.json == {
+        'name': ['min length is 3'],
+        'age': ['min value is 10']
+    }
+
+    r = c.put_json('/', {'name': 5, 'age': '8'}, status=422)
+    assert r.json == {
+        'name': ['must be of string type'],
+        'age': ['must be of integer type']
+    }
+
 
 def test_cerberus_with_different_schemas():
     user_schema = {
