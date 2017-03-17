@@ -1,7 +1,7 @@
 CHANGES
 =======
 
-0.1 (unreleased)
+0.1 (2017-03-17)
 ----------------
 
 * initial public release.
