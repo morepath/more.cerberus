@@ -28,7 +28,7 @@ setup(name='more.cerberus',
           'Programming Language :: Python :: 3.5',
       ],
       install_requires=[
-          'morepath >= 0.18.dev0',
+          'morepath >= 0.18',
           'cerberus'
       ],
       extras_require=dict(
