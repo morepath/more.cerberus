@@ -4,7 +4,7 @@ more.cerberus: validation and normalization support for Morepath
 This package provides Morepath integration for the Cerberus_ data validation
 library:
 
-.. _Cerberus: https://python-cerberus.org
+.. _Cerberus: http://python-cerberus.org
 
 Cerberus can automate user input validation and normalization in a HTTP API.
 
