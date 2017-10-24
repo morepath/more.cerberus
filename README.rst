@@ -225,3 +225,41 @@ response with the Cerberus errors structure:
       pass
 
 Now your app has reasonable error handling built-in.
+
+If you want a different error view you can instead create it
+by yourself, e.g.:
+
+.. code-block:: python
+
+  from more.cerberus.error import ValidationError
+
+  from .app import App
+
+
+  @App.json(model=ValidationError)
+  def validation_error(self, request):
+      @request.after
+      def set_status(response):
+          response.status = 422
+
+      errors = list(self.errors.values())[0][0]
+
+      return {
+          'errors': errors
+      }
+
+This could be used to extract the errors from a schema wrapped into
+a dictionary like:
+
+.. code-block:: yaml
+
+  article-schema:
+    article:
+      type: dict
+      schema:
+        title:
+          type: string
+          required: true
+        body:
+          type: string
+          required: true
