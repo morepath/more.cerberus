@@ -1,7 +1,7 @@
 CHANGES
 =======
 
-0.2 (unreleased)
+0.2 (2018-02-11)
 ----------------
 
 - Add Python 3.6 support.

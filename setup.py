@@ -7,7 +7,7 @@ long_description = (
     io.open('CHANGES.rst', encoding='utf-8').read())
 
 setup(name='more.cerberus',
-      version='0.2.dev0',
+      version='0.2',
       description="Cerberus validation support for Morepath",
       long_description=long_description,
       author="Henri Hulski",
