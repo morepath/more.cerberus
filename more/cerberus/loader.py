@@ -7,7 +7,7 @@ from .error import ValidationError
 def load(schema, validator, update, request):
     if update is None:
         update = False
-        if request.method == 'PUT' or request.method == 'PATCH':
+        if request.method == "PUT" or request.method == "PATCH":
             update = True
     v = validator(request=request)
     if v.validate(request.json, schema, update=update):
