@@ -103,7 +103,7 @@ CerberusValidator:
   from more.cerberus import CerberusValidator
 
   class CustomValidator(CerberusValidator):
-      def _validator_validate_email(self, field, value):
+      def _check_with_validate_email(self, field, value):
         match = re.match(
           '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',value
         )
@@ -131,9 +131,17 @@ Now you can use the new email validator and normalizer in your schema:
 .. code-block:: python
 
   user_schema = {
-    'name': {'type': 'string', 'minlength' : 3, 'required': True},
-    'email': {'type': 'string', 'validator': 'validate_email',
-              'coerce': 'normalize_email','required': True}
+    'name': {
+      'type': 'string',
+      'minlength' : 3,
+      'required': True,
+    },
+    'email': {
+      'type': 'string',
+      'check_with': 'validate_email',
+      'coerce': 'normalize_email',
+      'required': True,
+    }
   }
 
 or with YAML:
@@ -147,7 +155,7 @@ or with YAML:
       required: true
     email:
       type: string
-      validator: validate_email
+      check_with: validate_email
       coerce: normalize_email
       required: true
 
@@ -179,7 +187,7 @@ normalization using a service based on `email_validator`_:
 
 
   class Validator(CerberusValidator):
-      def _validator_verify_email(self, field, value):
+      def _check_with_verify_email(self, field, value):
           email_validation_service = self.request.app.service(
               name='email_validation'
           )
