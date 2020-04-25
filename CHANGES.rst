@@ -4,7 +4,13 @@ CHANGES
 0.3 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- **Removed**: Removed support for Python 2.
+  
+  You have to upgrade to Python 3 if you want to use this version.
+
+- Added support for Python 3.7 and 3.8 and PyPy 3.6.
+
+- Make Python 3.7 the default testing environment.
 
 - Upgrade Cerberus to version 1.3.2.
 

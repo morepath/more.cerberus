@@ -5,7 +5,7 @@ from more.cerberus import CerberusApp, CerberusValidator, loader
 
 
 def test_cerberus():
-    class User(object):
+    class User:
         def __init__(self, name=None, age=None):
             self.name = name
             self.age = age
@@ -96,12 +96,12 @@ def test_cerberus_with_different_schemas():
         }
     }
 
-    class User(object):
+    class User:
         def __init__(self, name=None, age=None):
             self.name = name
             self.age = age
 
-    class Document(object):
+    class Document:
         def __init__(self, title=None, author=None):
             self.title = title
             self.author = author
@@ -143,7 +143,7 @@ def test_cerberus_with_different_schemas():
 
 
 def test_custom_validator():
-    class User(object):
+    class User:
         def __init__(self, name=None, email=None):
             self.name = name
             self.email = email
@@ -206,7 +206,7 @@ def test_custom_validator():
 
 
 def test_custom_validator_with_request():
-    class User(object):
+    class User:
         def __init__(self, name=None, email=None):
             self.name = name
             self.email = email
