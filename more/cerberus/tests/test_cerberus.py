@@ -149,7 +149,7 @@ def test_custom_validator():
             self.email = email
 
     class Validator(CerberusValidator):
-        def _validator_validate_email(self, field, value):
+        def _check_with_validate_email(self, field, value):
             if '@' not in value:
                 self._error(field, 'Not valid email')
 
@@ -163,7 +163,7 @@ def test_custom_validator():
         },
         'email': {
             'type': 'string',
-            'validator': 'validate_email',
+            'check_with': 'validate_email',
             'coerce': 'normalize_email',
             'required': True
         }
@@ -212,7 +212,7 @@ def test_custom_validator_with_request():
             self.email = email
 
     class Validator(CerberusValidator):
-        def _validator_validate_email(self, field, value):
+        def _check_with_validate_email(self, field, value):
             if self.request.app.settings.email.at not in value:
                 self._error(field, 'Not valid email')
 
@@ -223,7 +223,7 @@ def test_custom_validator_with_request():
         },
         'email': {
             'type': 'string',
-            'validator': 'validate_email',
+            'check_with': 'validate_email',
             'required': True
         }
     }

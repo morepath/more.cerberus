@@ -6,6 +6,7 @@ CHANGES
 
 - Nothing changed yet.
 
+- Upgrade Cerberus to version 1.3.2.
 
 0.2 (2018-02-11)
 ----------------
