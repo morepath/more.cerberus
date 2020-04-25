@@ -14,6 +14,9 @@ CHANGES
 
 - Upgrade Cerberus to version 1.3.2.
 
+- Add integration for the Black code formatter.
+
+
 0.2 (2018-02-11)
 ----------------
 
