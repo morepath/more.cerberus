@@ -8,7 +8,7 @@ long_description = (
 
 setup(
     name="more.cerberus",
-    version="0.3.dev0",
+    version="0.3",
     description="Cerberus validation support for Morepath",
     long_description=long_description,
     author="Henri Hulski",
