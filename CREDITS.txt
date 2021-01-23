@@ -2,3 +2,4 @@ CREDITS
 =======
 
 * Henri Hulski (author)
+* Jürgen Gmach (CI)
