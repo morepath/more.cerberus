@@ -9,11 +9,9 @@ CHANGES
 
 - Add translation support for error messages.
 
-- Fix Flake8.
+- Drop support for Python 3.4 - 3.7.
 
-- Drop support for Python 3.4 and 3.5.
-
-- Add support for Python 3.9.
+- Add support for Python 3.9 - 3.12.
 
 - Use GitHub Actions for CI.
 

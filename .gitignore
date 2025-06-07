@@ -4,11 +4,11 @@ __pycache__/
 
 # Distribution / packaging
 *.egg-info/
-/build/
-/dist/
+build
+dist
 
 # Virtualenv
-/env/
+ env
 .venv
 
 # Unit test / coverage reports
@@ -18,9 +18,9 @@ __pycache__/
 htmlcov
 .tox
 
-# Sphinx documentation
-/doc/build/
-
 # Editors
 .vscode
 .idea
+
+# Type checking
+.mypy_cache
