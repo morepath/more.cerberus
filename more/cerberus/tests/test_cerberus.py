@@ -100,9 +100,7 @@ def test_cerberus_with_different_schemas():
         for key, value in json.items():
             setattr(self, key, value)
 
-    @App.json(
-        model=Document, request_method="POST", load=loader(document_schema)
-    )
+    @App.json(model=Document, request_method="POST", load=loader(document_schema))
     def document_post(self, request, json):
         for key, value in json.items():
             setattr(self, key, value)
@@ -151,9 +149,7 @@ def test_custom_validator():
     def get_user():
         return user
 
-    @App.json(
-        model=User, request_method="POST", load=loader(user_schema, Validator)
-    )
+    @App.json(model=User, request_method="POST", load=loader(user_schema, Validator))
     def user_post(self, request, json):
         for key, value in json.items():
             setattr(self, key, value)
@@ -165,17 +161,14 @@ def test_custom_validator():
     assert user.name == "Somebody"
     assert user.email == "somebody@example.com"
 
-    r = c.post_json(
-        "/", {"name": "Somebody", "email": "wrong.email.com"}, status=422
-    )
+    r = c.post_json("/", {"name": "Somebody", "email": "wrong.email.com"}, status=422)
 
     assert r.json == {"email": ["Not valid email"]}
 
     with pytest.raises(TypeError) as excinfo:
         loader(user_schema, validator=User)
-    assert (
-        "Validator must be a subclass of more.cerberus.CerberusValidator"
-        in str(excinfo.value)
+    assert "Validator must be a subclass of more.cerberus.CerberusValidator" in str(
+        excinfo.value
     )
 
 
@@ -212,9 +205,7 @@ def test_custom_validator_with_request():
     def get_user():
         return user
 
-    @App.json(
-        model=User, request_method="POST", load=loader(user_schema, Validator)
-    )
+    @App.json(model=User, request_method="POST", load=loader(user_schema, Validator))
     def user_post(self, request, json):
         for key, value in json.items():
             setattr(self, key, value)
@@ -224,5 +215,8 @@ def test_custom_validator_with_request():
     r = c.post_json(
         "/", {"name": "Somebody", "email": "notvalid.email.com"}, status=422
     )
-
     assert r.json == {"email": ["Not valid email"]}
+
+    c.post_json("/", {"name": "Somebody", "email": "somebody@example.com"})
+    assert user.name == "Somebody"
+    assert user.email == "somebody@example.com"

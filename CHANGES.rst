@@ -4,6 +4,11 @@ CHANGES
 0.4 (unreleased)
 ----------------
 
+- Add support for custom error messages with placeholders
+  like {min}, {minlength}, {max}, {maxlength}.
+
+- Add translation support for error messages.
+
 - Fix Flake8.
 
 - Drop support for Python 3.4 and 3.5.
