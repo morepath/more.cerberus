@@ -1,7 +1,7 @@
 CHANGES
 =======
 
-0.4 (unreleased)
+0.4 (2025-06-12)
 ----------------
 
 - Add support for custom error messages with placeholders
