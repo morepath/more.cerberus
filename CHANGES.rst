@@ -5,7 +5,9 @@ CHANGES
 ----------------
 
 - Add support for custom error messages with placeholders
-  like {min}, {minlength}, {max}, {maxlength}.
+  {constraint}, {field} and {value}. When ``error.info`` tuple
+  is available, you can also use positional placeholders ({0}, {1})
+  in the error messages.
 
 - Add translation support for error messages.
 
