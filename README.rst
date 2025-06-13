@@ -323,21 +323,6 @@ Here's how placeholders are substituted at runtime:
   # What users will see when they enter "10" as age:
   # "Value must be at least 18"
 
-Multiple Type Validation
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-The library handles complex type validations elegantly.
-For example, when a field can accept multiple types:
-
-.. code-block:: python
-
-  # Schema accepting either string or integer
-  schema = {"id": {"type": ["string", "integer"]}}
-  message_mapping = {"type": "Must be either {type}"}
-
-  # What users will see with invalid input:
-  # "Must be either string or integer"
-
 YAML Message Mapping
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -448,102 +433,102 @@ Example in a Morepath App
       # Handle validated input
 
 
-Troubleshooting
----------------
+Integrating gettext as a service with custom TranslatorValidator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Here are solutions to common issues you might encounter:
+An elegant solutions for integrating gettext with more.cerberus is to create a
+custom TranslatorValidator that uses a gettext service. This allows you to
+use the same translation service across your application, ensuring consistency
+and maintainability.
 
-Missing Placeholders
-~~~~~~~~~~~~~~~~~~~~
+Here's how you can implement it:
 
-If placeholders in your error messages aren't being replaced:
+1. Add support for a gettext service to your application:
 
-1. Verify that you're using the correct placeholder syntax: ``{constraint}``,
-   ``{value}`` and ``{field}``.
-2. Check that the rule name in your message_mapping matches the rule
-   in your schema
+   .. code-block:: python
 
-Translation Issues
-~~~~~~~~~~~~~~~~~~
+    # app.py
+    import morepath
+    from more.cerberus import CerberusApp
+    from reg import match_key
 
-If translations aren't working as expected:
-
-1. Make sure your translator function is callable and returns a string
-2. Verify your .po/.mo files are properly formatted and located
-3. Test your translator function independently to confirm it works
-4. Remember that placeholders are replaced before translation occurs
-
-Complex Validation Rules
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-For complex validations with custom rules:
-
-1. Define custom error messages that include ``{constraint}`` placeholders
-2. Use the ``{field}`` placeholder to indicate which field failed validation
-3. Consider using the ``{value}`` placeholder to show the invalid input
-   in error messages
-
-Error handling
---------------
-
-If validation fails due to a validation error (a required field is
-missing, or a field is of the wrong datatype, for instance), you want
-to show some kind of error message. The ``load`` function created by
-``more.cerberus`` raises the ``more.cerberus.ValidationError`` exception
-in case of errors.
-
-This exception object has an ``errors`` attribute with the validation errors.
-You must define an exception view for it, otherwise validation errors are
-returned as "500 internal server error" to API users.
-
-This package provides a default exception view implementation. If you subclass
-your application from ``more.cerberus.CerberusApp`` then you get a default
-error view for ``ValidationError`` that has a 422 status code with a JSON
-response with the Cerberus errors structure:
-
-.. code-block:: python
-
-  from more.cerberus import CerberusApp
-
-  class App(CerberusApp):
-      pass
-
-Now your app has reasonable error handling built-in.
-
-If you want a different error view you can instead create it
-by yourself, e.g.:
-
-.. code-block:: python
-
-  from more.cerberus.error import ValidationError
-
-  from .app import App
+    class App(CerberusApp):
+        @morepath.dispatch_method(match_key("name"))
+        def service(self, name):
+            raise NotImplementedError
 
 
-  @App.json(model=ValidationError)
-  def validation_error(self, request):
-      @request.after
-      def set_status(response):
-          response.status = 422
+    # services.py
+    import gettext
+    from .app import App
 
-      errors = list(self.errors.values())[0][0]
+    class TranslationService:
+        def __init__(self, locale):
+            self.locale = locale
+            self.translations = gettext.translation(
+                "messages", "translations", languages=[locale], fallback=True
+            )
 
-      return {
-          'errors': errors
-      }
+        def gettext(self, message):
+            translated = self.translations.gettext(message)
+            return translated
 
-This could be used to extract the errors from a schema wrapped into
-a dictionary like:
+        def ngettext(self, singular, plural, n):
+            return self.translations.ngettext(singular, plural, n)
 
-.. code-block:: yaml
+    @App.method(App.service, name="translator")
+    def translator_service(app, name):
+        # get the actual locale from user settings or request
+        locale = app.settings.default_locale
 
-  article-schema:
-    article:
-      type: dict
-      schema:
-        title:
-          type: string
-          required: true
-        body:
-          type: string
-          required: true
+        return TranslationService(locale=locale)
+
+2. Create a custom TranslatorValidator that uses this service:
+
+   .. code-block:: python
+
+    # validator.py
+    from more.cerberus import CerberusValidator
+
+    class TranslationValidator(CerberusValidator):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            translator = self.request.app.service(name="translator")
+            self.translator_func = translator.gettext
+
+    # you can also subclass other custom validators to get the translation functionality
+    class EmailValidator(TranslationValidator): ...
+
+3. Now you can use the TranslationValidator in your views:
+
+   .. code-block:: python
+
+    # views.py
+    from more.cerberus import loader
+    from .app import App
+    from .validator import TranslationValidator
+
+    with open("my_app/settings/default_messages.yml") as default_messages_yml:
+      messages: dict[str, Any] = yaml.safe_load(default_messages_yml)
+
+    with open("my_app/my_module/messages.yml") as messages_yml:
+        messages.update(yaml.safe_load(messages_yml))
+
+    with open("my_app/my_module/schema.yml") as schema_yml:
+        schema: dict[str, Any] = yaml.safe_load(schema_yml)
+
+    my_entity_validator = loader(schema["my_entity"], TranslationValidator, message_mapping=messages)
+
+
+    @App.json(
+        model=MyEntity,
+        request_method="PATCH",
+        load=my_entity_validator,
+    )
+    def my_entity_update(self, request, json): # now your Cerberus messages will be translated
+
+        # you can also use the translator service directly
+        _ = request.app.service(name="translator").gettext
+
+        if user is None:
+            return {"validationError": _("User not found")}

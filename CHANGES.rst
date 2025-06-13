@@ -4,7 +4,7 @@ CHANGES
 0.5 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Document integrating gettext as a service with a custom TranslatorValidator.
 
 
 0.4 (2025-06-12)
