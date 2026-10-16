@@ -1,7 +1,7 @@
 from functools import partial
 
-from .validator import CerberusValidator
 from .error import ValidationError
+from .validator import CerberusValidator
 
 
 def load(schema, validator_factory, update, request):
@@ -54,7 +54,7 @@ def loader(
             translator_func=translator_func,
             translation_domain=translation_domain,
             message_mapping=message_mapping,
-            **kwargs
+            **kwargs,
         )
 
     return partial(load, schema, validator_factory, update)

@@ -1,5 +1,6 @@
-from more.cerberus.validator import CerberusValidator, TranslationErrorHandler
 from unittest.mock import MagicMock
+
+from more.cerberus.validator import CerberusValidator, TranslationErrorHandler
 
 
 def test_translation_error_handler_exception_handling():

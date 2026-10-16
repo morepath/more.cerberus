@@ -1,5 +1,5 @@
-from webtest import TestApp as Client
 import pytest
+from webtest import TestApp as Client
 
 from more.cerberus import CerberusApp, CerberusValidator, loader
 

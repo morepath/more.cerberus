@@ -141,8 +141,7 @@ class CerberusValidator(Validator):
         )
 
         # Remove any existing error_handler from kwargs to avoid conflicts
-        if "error_handler" in kwargs:
-            del kwargs["error_handler"]
+        kwargs.pop("error_handler", None)
 
         # Initialize the parent Validator with our custom error handler
         super().__init__(*args, error_handler=self.error_handler, **kwargs)
