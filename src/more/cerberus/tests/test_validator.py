@@ -1,3 +1,5 @@
+from typing import Any
+
 from more.cerberus.validator import CerberusValidator
 
 
@@ -6,7 +8,7 @@ class TestCerberusValidator:
 
     # Basic validation tests
 
-    def test_simple_validation_with_custom_message(self):
+    def test_simple_validation_with_custom_message(self) -> None:
         """Test basic validation with custom error message."""
         schema = {"name": {"type": "string", "required": True}}
         message_mapping = {"required": "Field {field} is mandatory!"}
@@ -16,13 +18,13 @@ class TestCerberusValidator:
 
         assert validator.errors == {"name": ["Field name is mandatory!"]}
 
-    def test_translation_function(self):
+    def test_translation_function(self) -> None:
         """Test that translation function is applied to messages."""
         schema = {"age": {"type": "integer", "min": 18}}
         message_mapping = {"min": "Must be at least {constraint}"}
 
         # Simple translation function that adds a prefix
-        def translator(text):
+        def translator(text: str) -> str:
             return f"ERROR: {text}"
 
         validator = CerberusValidator(
@@ -32,7 +34,7 @@ class TestCerberusValidator:
 
         assert validator.errors == {"age": ["ERROR: Must be at least 18"]}
 
-    def test_nested_schema_validation(self):
+    def test_nested_schema_validation(self) -> None:
         """Test validation with nested schemas."""
         schema = {
             "person": {
@@ -55,7 +57,7 @@ class TestCerberusValidator:
         assert "Value must be at least 18" in validator.errors["person"][0]["age"]
         assert "Field name must be provided" in validator.errors["person"][0]["name"]
 
-    def test_list_of_dicts_validation(self):
+    def test_list_of_dicts_validation(self) -> None:
         """Test validation of a list of dictionaries."""
         schema = {
             "users": {
@@ -83,7 +85,7 @@ class TestCerberusValidator:
         assert "users" in validator.errors
         assert "Invalid email format" in str(validator.errors["users"])
 
-    def test_logical_validation_errors(self):
+    def test_logical_validation_errors(self) -> None:
         """Test validation with logical operators (anyof, allof, etc.)."""
         schema = {
             "field": {
@@ -109,7 +111,7 @@ class TestCerberusValidator:
             in validator.errors["field"][0]
         )
 
-    def test_dependencies_validation(self):
+    def test_dependencies_validation(self) -> None:
         """Test validation with dependencies rule."""
         schema = {
             "credit_card": {"type": "string"},
@@ -123,7 +125,7 @@ class TestCerberusValidator:
         assert "billing_address" in validator.errors
         assert "credit_card" in validator.errors["billing_address"][0]
 
-    def test_complex_data_structure(self):
+    def test_complex_data_structure(self) -> None:
         """Test validation with a complex data structure."""
         schema = {
             "product": {
@@ -172,7 +174,7 @@ class TestCerberusValidator:
         assert "sku is required" in errors_str  # for first variant
         assert "Value must be at least 0" in errors_str  # for stock in first variant
 
-    def test_value_placeholder(self):
+    def test_value_placeholder(self) -> None:
         """Test that the {value} placeholder works properly in different validation rules."""
         schema = {
             "name": {"type": "string", "minlength": 3, "maxlength": 10},
@@ -193,6 +195,7 @@ class TestCerberusValidator:
             "regex": "'{value}' is not a valid format",
         }
 
+        document: dict[str, Any] = {}
         validator = CerberusValidator(schema, message_mapping=message_mapping)
 
         # Test min rule - numeric value
@@ -238,13 +241,13 @@ class TestCerberusValidator:
         assert "Field 'category' contains value" in error_message
         assert "must be of ['string', 'integer'] type" in error_message
 
-    def test_value_placeholder_with_translation(self):
+    def test_value_placeholder_with_translation(self) -> None:
         """Test that the {value} placeholder works with translation."""
         schema = {"age": {"type": "integer", "min": 18}}
         min_template = "Value '{value}' is too young (min {constraint})"
         message_mapping = {"min": min_template}
 
-        def translator(text):
+        def translator(text: str) -> str:
             translations = {
                 min_template: "Wert '{value}' ist zu jung (min {constraint})"
             }
@@ -260,7 +263,7 @@ class TestCerberusValidator:
         error_message = str(validator.errors["age"][0])
         assert "Wert '15' ist zu jung (min 18)" in error_message
 
-    def test_value_placeholder_in_nested_structures(self):
+    def test_value_placeholder_in_nested_structures(self) -> None:
         """Test that the {value} placeholder works in nested structures."""
         schema = {
             "person": {
@@ -289,7 +292,7 @@ class TestCerberusValidator:
         assert "String 'Jo' is too short" in error_str
         assert "Value '15' is below minimum of 18" in error_str
 
-    def test_fallback_formatting(self):
+    def test_fallback_formatting(self) -> None:
         """Test fallback formatting when standard formatting fails."""
         schema = {"age": {"type": "integer", "min": 18}}
 

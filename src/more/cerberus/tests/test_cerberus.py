@@ -1,12 +1,19 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 from webtest import TestApp as Client
 
 from more.cerberus import CerberusApp, CerberusValidator, loader
 
+if TYPE_CHECKING:
+    from morepath import Request
 
-def test_cerberus():
+
+def test_cerberus() -> None:
     class User:
-        def __init__(self, name=None, age=None):
+        def __init__(self, name: str | None = None, age: int | None = None) -> None:
             self.name = name
             self.age = age
 
@@ -21,16 +28,16 @@ def test_cerberus():
     user = User()
 
     @App.path(model=User, path="/")
-    def get_user():
+    def get_user() -> User:
         return user
 
     @App.json(model=User, request_method="POST", load=loader(user_schema))
-    def user_post(self, request, json):
+    def user_post(self: User, request: Request, json: dict[str, object]) -> None:
         for key, value in json.items():
             setattr(self, key, value)
 
     @App.json(model=User, request_method="PUT", load=loader(user_schema))
-    def user_put(self, request, json):
+    def user_put(self: User, request: Request, json: dict[str, object]) -> None:
         for key, value in json.items():
             setattr(self, key, value)
 
@@ -60,7 +67,7 @@ def test_cerberus():
     }
 
 
-def test_cerberus_with_different_schemas():
+def test_cerberus_with_different_schemas() -> None:
     user_schema = {
         "name": {"type": "string", "minlength": 3, "required": True},
         "age": {"type": "integer", "min": 10, "required": True},
@@ -72,12 +79,12 @@ def test_cerberus_with_different_schemas():
     }
 
     class User:
-        def __init__(self, name=None, age=None):
+        def __init__(self, name: str | None = None, age: int | None = None) -> None:
             self.name = name
             self.age = age
 
     class Document:
-        def __init__(self, title=None, author=None):
+        def __init__(self, title: str | None = None, author: str | None = None) -> None:
             self.title = title
             self.author = author
 
@@ -88,20 +95,22 @@ def test_cerberus_with_different_schemas():
     document = Document()
 
     @App.path(model=User, path="/user")
-    def get_user():
+    def get_user() -> User:
         return user
 
     @App.path(model=Document, path="/document")
-    def get_document():
+    def get_document() -> Document:
         return document
 
     @App.json(model=User, request_method="POST", load=loader(user_schema))
-    def user_post(self, request, json):
+    def user_post(self: User, request: Request, json: dict[str, object]) -> None:
         for key, value in json.items():
             setattr(self, key, value)
 
     @App.json(model=Document, request_method="POST", load=loader(document_schema))
-    def document_post(self, request, json):
+    def document_post(
+        self: Document, request: Request, json: dict[str, object]
+    ) -> None:
         for key, value in json.items():
             setattr(self, key, value)
 
@@ -116,18 +125,18 @@ def test_cerberus_with_different_schemas():
     assert document.author == "Somebody"
 
 
-def test_custom_validator():
+def test_custom_validator() -> None:
     class User:
-        def __init__(self, name=None, email=None):
+        def __init__(self, name: str | None = None, email: str | None = None) -> None:
             self.name = name
             self.email = email
 
     class Validator(CerberusValidator):
-        def _check_with_validate_email(self, field, value):
+        def _check_with_validate_email(self, field: str, value: str) -> None:
             if "@" not in value:
                 self._error(field, "Not valid email")
 
-        def _normalize_coerce_normalize_email(self, value):
+        def _normalize_coerce_normalize_email(self, value: str) -> str:
             return value.lower()
 
     user_schema = {
@@ -146,11 +155,11 @@ def test_custom_validator():
     user = User()
 
     @App.path(model=User, path="/")
-    def get_user():
+    def get_user() -> User:
         return user
 
     @App.json(model=User, request_method="POST", load=loader(user_schema, Validator))
-    def user_post(self, request, json):
+    def user_post(self: User, request: Request, json: dict[str, object]) -> None:
         for key, value in json.items():
             setattr(self, key, value)
 
@@ -166,20 +175,20 @@ def test_custom_validator():
     assert r.json == {"email": ["Not valid email"]}
 
     with pytest.raises(TypeError) as excinfo:
-        loader(user_schema, validator=User)
+        loader(user_schema, validator=User)  # type: ignore[arg-type]
     assert "Validator must be a subclass of more.cerberus.CerberusValidator" in str(
         excinfo.value
     )
 
 
-def test_custom_validator_with_request():
+def test_custom_validator_with_request() -> None:
     class User:
-        def __init__(self, name=None, email=None):
+        def __init__(self, name: str | None = None, email: str | None = None) -> None:
             self.name = name
             self.email = email
 
     class Validator(CerberusValidator):
-        def _check_with_validate_email(self, field, value):
+        def _check_with_validate_email(self, field: str, value: str) -> None:
             if self.request.app.settings.email.at not in value:
                 self._error(field, "Not valid email")
 
@@ -198,15 +207,15 @@ def test_custom_validator_with_request():
     user = User()
 
     @App.setting(section="email", name="at")
-    def get_email_setting():
+    def get_email_setting() -> str:
         return "@"
 
     @App.path(model=User, path="/")
-    def get_user():
+    def get_user() -> User:
         return user
 
     @App.json(model=User, request_method="POST", load=loader(user_schema, Validator))
-    def user_post(self, request, json):
+    def user_post(self: User, request: Request, json: dict[str, object]) -> None:
         for key, value in json.items():
             setattr(self, key, value)
 

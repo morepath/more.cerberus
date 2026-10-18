@@ -1,29 +1,40 @@
+from __future__ import annotations
+
 from functools import partial
+from typing import TYPE_CHECKING, Any, cast
 
 from .error import ValidationError
 from .validator import CerberusValidator
 
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
 
-def load(schema, validator_factory, update, request):
+
+def load(
+    schema: Mapping[str, Any],
+    validator_factory: Callable[..., CerberusValidator],
+    update: bool | None,
+    request: Any,
+) -> dict[str, Any]:
     if update is None:
         update = False
         if request.method == "PUT" or request.method == "PATCH":
             update = True
     v = validator_factory(request=request)
     if v.validate(request.json, schema, update=update):
-        return v.document
+        return cast("dict[str, Any]", v.document)
     else:
         raise ValidationError(v.errors)
 
 
 def loader(
-    schema,
-    validator=CerberusValidator,
-    update=None,
-    translator_func=None,
-    translation_domain="messages",
-    message_mapping=None,
-):
+    schema: Mapping[str, Any],
+    validator: type[CerberusValidator] = CerberusValidator,
+    update: bool | None = None,
+    translator_func: Callable[[str], str] | None = None,
+    translation_domain: str = "messages",
+    message_mapping: dict[str, str] = {},
+) -> Callable[[Any], dict[str, Any]]:
     """Create a load function based on schema dict and Validator class.
 
     :param schema: a Cerberus schema dict.
@@ -44,12 +55,12 @@ def loader(
     and uses the schema to validate it. This function raises
     :class:`more.cerberus.ValidationError` if validation is not successful.
     """
-    if not issubclass(validator, CerberusValidator):
+    if not issubclass(cast("type[object]", validator), CerberusValidator):
         raise TypeError(
             "Validator must be a subclass of more.cerberus.CerberusValidator"
         )
 
-    def validator_factory(**kwargs):
+    def validator_factory(**kwargs: Any) -> CerberusValidator:
         return validator(
             translator_func=translator_func,
             translation_domain=translation_domain,

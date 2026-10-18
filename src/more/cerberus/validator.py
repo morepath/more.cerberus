@@ -1,5 +1,12 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from cerberus import Validator
 from cerberus.errors import BasicErrorHandler
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class TranslationErrorHandler(BasicErrorHandler):
@@ -12,7 +19,14 @@ class TranslationErrorHandler(BasicErrorHandler):
     - Format error messages with field names, constraint values, and input values
     """
 
-    def __init__(self, tree=None, message_mapping=None, translator_func=None):
+    translator_func: Callable[[str], str] | None
+
+    def __init__(
+        self,
+        tree: Any = None,
+        message_mapping: dict[str, str] = {},
+        translator_func: Callable[[str], str] | None = None,
+    ) -> None:
         """Initialize the TranslationErrorHandler.
 
         Args:
@@ -21,16 +35,16 @@ class TranslationErrorHandler(BasicErrorHandler):
             translator_func: Callable function for translating messages
         """
         super().__init__(tree=tree)
-        self.message_mapping = message_mapping or {}
+        self.message_mapping = message_mapping
         self.translator_func = translator_func
-        self.custom_messages = {}
+        self.custom_messages: dict[str, str] = {}
 
         # Set up custom messages
         if self.message_mapping:
             for rule, message in self.message_mapping.items():
                 self.custom_messages[rule] = message
 
-    def _format_message(self, field, error):
+    def _format_message(self, field: Any, error: Any) -> str:
         """Format an error message with translation support.
 
         First tries to use custom message templates if defined for this error rule.
@@ -117,26 +131,34 @@ class CerberusValidator(Validator):
         {'name': ['Field name is mandatory']}
     """
 
-    def __init__(self, *args, **kwargs):
+    error_handler: TranslationErrorHandler
+
+    def __init__(
+        self,
+        *args: Any,
+        translator_func: Callable[[str], str] | None = None,
+        translation_domain: str = "messages",
+        message_mapping: dict[str, str] = {},
+        request: Any = None,
+        **kwargs: Any,
+    ) -> None:
         """Initialize the CerberusValidator.
 
         Args:
             *args: Arguments passed to the parent Cerberus Validator
-            **kwargs: Special keyword arguments include:
-                translator_func: Callable function for translating messages
-                translation_domain: Domain for translation (default: "messages")
-                message_mapping: Dictionary mapping rule names to custom message templates
-                request: Optional request object for integration with web frameworks
+            translator_func: Callable function for translating messages
+            translation_domain: Domain for translation (default: "messages")
+            message_mapping: Dictionary mapping rule names to custom message templates
+            request: Optional request object for integration with web frameworks
+            **kwargs: Keyword arguments to pass
         """
-        self._translator_func = kwargs.pop("translator_func", None)
-        self.translation_domain = kwargs.pop("translation_domain", "messages")
-        self.message_mapping = kwargs.pop("message_mapping", {})
-
-        if "request" in kwargs:
-            self.request = kwargs["request"]
+        self._translator_func: Callable[[str], str] | None = translator_func
+        self.translation_domain: str = translation_domain
+        self.message_mapping: dict[str, str] = message_mapping
+        self.request: Any = request
 
         # Create our custom error handler
-        self.error_handler = TranslationErrorHandler(
+        self.error_handler = TranslationErrorHandler(  # pyright: ignore[reportIncompatibleVariableOverride]
             message_mapping=self.message_mapping, translator_func=self._translator_func
         )
 
@@ -144,15 +166,23 @@ class CerberusValidator(Validator):
         kwargs.pop("error_handler", None)
 
         # Initialize the parent Validator with our custom error handler
-        super().__init__(*args, error_handler=self.error_handler, **kwargs)
+        super().__init__(
+            *args,
+            translator_func=self._translator_func,
+            translation_domain=self.translation_domain,
+            message_mapping=self.message_mapping,
+            request=self.request,
+            error_handler=self.error_handler,
+            **kwargs,
+        )
 
     @property
-    def translator_func(self):
+    def translator_func(self) -> Callable[[str], str] | None:
         """Get the translator function."""
         return self._translator_func
 
     @translator_func.setter
-    def translator_func(self, value):
+    def translator_func(self, value: Callable[[str], str] | None) -> None:
         """Set the translator function and update the error_handler.
 
         When the translator_func is updated, we also update it in the error_handler

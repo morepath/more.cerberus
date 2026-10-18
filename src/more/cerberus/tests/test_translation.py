@@ -1,9 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from webtest import TestApp as Client
 
 from more.cerberus import CerberusApp, CerberusValidator, loader
 
+if TYPE_CHECKING:
+    from morepath import Request
 
-def mock_translator(text):
+
+def mock_translator(text: str) -> str:
     """Mock translator function that simulates a gettext implementation"""
     translations = {
         # Custom messages with placeholders
@@ -24,11 +31,16 @@ def mock_translator(text):
 
 
 # Core functionality tests
-def test_translation():
+def test_translation() -> None:
     """Test that custom error messages with placeholders are properly translated"""
 
     class User:
-        def __init__(self, name=None, age=None, email=None):
+        def __init__(
+            self,
+            name: str | None = None,
+            age: int | None = None,
+            email: str | None = None,
+        ) -> None:
             self.name = name
             self.age = age
             self.email = email
@@ -57,7 +69,7 @@ def test_translation():
     user = User()
 
     @App.path(model=User, path="/")
-    def get_user():
+    def get_user() -> User:
         return user
 
     @App.json(
@@ -69,7 +81,7 @@ def test_translation():
             message_mapping=message_mapping,
         ),
     )
-    def user_post(self, request, json):
+    def user_post(self: User, request: Request, json: dict[str, object]) -> None:
         for key, value in json.items():
             setattr(self, key, value)
 
@@ -99,11 +111,11 @@ def test_translation():
     assert user.email == "test@example.com"
 
 
-def test_translation_without_mapping():
+def test_translation_without_mapping() -> None:
     """Test that translation works even without a message mapping"""
 
     class User:
-        def __init__(self, name=None, age=None):
+        def __init__(self, name: str | None = None, age: int | None = None) -> None:
             self.name = name
             self.age = age
 
@@ -118,7 +130,7 @@ def test_translation_without_mapping():
     user = User()
 
     @App.path(model=User, path="/")
-    def get_user():
+    def get_user() -> User:
         return user
 
     @App.json(
@@ -126,7 +138,7 @@ def test_translation_without_mapping():
         request_method="POST",
         load=loader(user_schema, translator_func=mock_translator),
     )
-    def user_post(self, request, json):
+    def user_post(self: User, request: Request, json: dict[str, object]) -> None:
         pass  # pragma: no cover
 
     c = Client(App())
@@ -136,11 +148,11 @@ def test_translation_without_mapping():
     assert "name" in r.json
 
 
-def test_message_mapping_without_translation():
+def test_message_mapping_without_translation() -> None:
     """Test that message mapping works without a translator function"""
 
     class User:
-        def __init__(self, name=None, age=None):
+        def __init__(self, name: str | None = None, age: int | None = None) -> None:
             self.name = name
             self.age = age
 
@@ -160,7 +172,7 @@ def test_message_mapping_without_translation():
     user = User()
 
     @App.path(model=User, path="/")
-    def get_user():
+    def get_user() -> User:
         return user
 
     @App.json(
@@ -168,7 +180,7 @@ def test_message_mapping_without_translation():
         request_method="POST",
         load=loader(user_schema, message_mapping=message_mapping),
     )
-    def user_post(self, request, json):
+    def user_post(self: User, request: Request, json: dict[str, object]) -> None:
         pass  # pragma: no cover
 
     c = Client(App())
@@ -185,7 +197,7 @@ def test_message_mapping_without_translation():
     assert r.json == {"age": ["must be of integer type"]}
 
 
-def test_minlength_validation():
+def test_minlength_validation() -> None:
     """Test that minlength validation with custom messages and placeholders works"""
     schema = {"name": {"type": "string", "minlength": 3}}
     message_mapping = {"minlength": "min length is {constraint}"}
@@ -211,7 +223,7 @@ def test_minlength_validation():
     assert not validator.errors
 
 
-def test_maxlength_validation():
+def test_maxlength_validation() -> None:
     """Test that maxlength validation with custom messages and placeholders works"""
     schema = {"name": {"type": "string", "maxlength": 5}}
     message_mapping = {"maxlength": "max length is {constraint}"}
@@ -237,7 +249,7 @@ def test_maxlength_validation():
     assert not validator.errors
 
 
-def test_max_validation():
+def test_max_validation() -> None:
     """Test that max validation with custom messages and placeholders works"""
     schema = {"score": {"type": "integer", "max": 100}}
     message_mapping = {"max": "Value must not exceed {constraint}"}
@@ -263,11 +275,12 @@ def test_max_validation():
     assert not validator.errors
 
 
-def test_multiple_types_validation():
+def test_multiple_types_validation() -> None:
     """Test validation with multiple allowed types"""
     # Schema with multiple allowed types
     schema = {"id": {"type": ["string", "integer"]}}
     message_mapping = {"type": "Must be of {constraint} type"}
+    document: dict[str, Any] = {}
 
     # Create validator with custom message mapping and translator
     validator = CerberusValidator(
@@ -292,11 +305,12 @@ def test_multiple_types_validation():
     assert validator.validate(document) is True
 
 
-def test_single_type_list_validation():
+def test_single_type_list_validation() -> None:
     """Test validation with a single type in a list"""
     # Schema with a single type in a list
     schema = {"id": {"type": ["integer"]}}
     message_mapping = {"type": "Must be of {constraint} type"}
+    document: dict[str, Any] = {}
 
     # Create validator with custom message mapping
     validator = CerberusValidator(schema, message_mapping=message_mapping)
@@ -316,7 +330,7 @@ def test_single_type_list_validation():
 
 
 # Tests for placeholder handling
-def test_placeholder_replacement():
+def test_placeholder_replacement() -> None:
     """Test that all types of placeholders are properly replaced in error messages"""
     # Define a schema with various validation rules
     schema = {
@@ -338,6 +352,7 @@ def test_placeholder_replacement():
         "minlength": "Length of '{value}' must be at least {constraint} characters",
         "maxlength": "Length of '{value}' must not exceed {constraint} characters",
     }
+    document: dict[str, Any] = {}
 
     # Create validator with custom message mapping
     validator = CerberusValidator(schema, message_mapping=message_mapping)
@@ -362,15 +377,15 @@ def test_placeholder_replacement():
 
 
 # Tests for specific error handler behaviors
-def test_error_info_translation():
+def test_error_info_translation() -> None:
     """Test that error messages are translated directly"""
 
-    def translator(text):
+    def translator(text: str) -> str:
         translations = {"required field": "Pflichtfeld"}
         return translations.get(text, text)
 
     schema = {"name": {"required": True}}
-    document = {}  # Missing required field
+    document: dict[str, Any] = {}  # Missing required field
 
     validator = CerberusValidator(schema, translator_func=translator)
     validator.validate(document)
@@ -380,12 +395,13 @@ def test_error_info_translation():
     assert "Pflichtfeld" in error_message
 
 
-def test_default_error_message_translation():
+def test_default_error_message_translation() -> None:
     """Test that default error messages from Cerberus are translated"""
-    schema = {
+    schema: dict[str, Any] = {
         "name": {"type": "string", "minlength": 3},
         "age": {"type": "integer", "min": 10, "required": True},
     }
+    document: dict[str, Any] = {}
 
     # Create validator with translator
     validator = CerberusValidator(schema, translator_func=mock_translator)
@@ -419,7 +435,7 @@ def test_default_error_message_translation():
 
 
 # Configuration tests
-def test_message_mapping_none():
+def test_message_mapping_none() -> None:
     """Test that when message_mapping is None, _set_message_mapping exits early"""
     # Create a schema for testing
     schema = {"name": {"type": "string", "required": True}}
@@ -434,7 +450,7 @@ def test_message_mapping_none():
     assert validator_with_mapping.message_mapping == message_mapping
 
 
-def test_standard_required_field_translation():
+def test_standard_required_field_translation() -> None:
     """
     Test that default Cerberus error messages like 'field is required'
     are properly translated even when not using custom message mapping.
@@ -446,7 +462,7 @@ def test_standard_required_field_translation():
     schema = {"name": {"type": "string", "required": True}}
 
     # Mock gettext-style translator function similar to what's used in washapp
-    def translator(text):
+    def translator(text: str) -> str:
         translations = {
             # Standard Cerberus error message for required field
             "required field": "dieses Feld ist erforderlich",
@@ -476,7 +492,7 @@ def test_standard_required_field_translation():
     assert "must be of string type" not in translated_message
 
 
-def test_late_translator_assignment():
+def test_late_translator_assignment() -> None:
     """Test that setting translator_func after initialization works correctly.
 
     This test verifies the specific case that occurs in frameworks like washapp
@@ -486,7 +502,7 @@ def test_late_translator_assignment():
     schema = {"name": {"type": "string", "required": True}}
 
     # Mock translator function
-    def translator(text):
+    def translator(text: str) -> str:
         translations = {
             "required field": "this is required now",
             "must be of string type": "must be text",
@@ -497,7 +513,7 @@ def test_late_translator_assignment():
     validator = CerberusValidator(schema)
 
     # Validate a document to trigger errors
-    document = {}
+    document: dict[str, Any] = {}
     validator.validate(document)
 
     # Errors should have standard English messages
@@ -520,7 +536,7 @@ def test_late_translator_assignment():
     assert "must be text" in str(validator.errors["name"][0])
 
 
-def test_translator_func_getter():
+def test_translator_func_getter() -> None:
     """Test that the translator_func getter property returns the correct function.
 
     This test ensures that the getter property for translator_func in the
@@ -531,19 +547,22 @@ def test_translator_func_getter():
     schema = {"name": {"type": "string"}}
 
     # Define two translator functions to test with
-    def translator1(text):
+    def translator1(text: str) -> str:
         return f"T1: {text}"
 
-    def translator2(text):
+    def translator2(text: str) -> str:
         return f"T2: {text}"
 
     # Test getting the translator set during initialization
     validator1 = CerberusValidator(schema, translator_func=translator1)
     assert validator1.translator_func is translator1
-    assert validator1.translator_func("test") == "T1: test"
+    translator = validator1.translator_func
+    assert translator is not None
+    assert translator("test") == "T1: test"
 
     # Test that the translator_func is correctly passed to error_handler
-    assert validator1.error_handler.translator_func is translator1
+    error_handler = validator1.error_handler
+    assert error_handler.translator_func is translator1
 
     # Test that the getter returns None when no translator is set
     validator2 = CerberusValidator(schema)
@@ -552,7 +571,9 @@ def test_translator_func_getter():
     # Test getting the translator after setting it via the setter
     validator2.translator_func = translator2
     assert validator2.translator_func is translator2
-    assert validator2.translator_func("test") == "T2: test"
+    translator = validator2.translator_func
+    assert translator is not None
+    assert translator("test") == "T2: test"
 
     # Test that setting to None works correctly
     validator1.translator_func = None
